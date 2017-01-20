@@ -71,13 +71,109 @@ class PQsortRatio implements Comparator<globe> {
 	}
 }
 
+class sack {
+	
+	private double lowerBoundValue;
+	private double lowerBoundCost;
+	private double upperBoundValue;
+	private double upperBoundCost;
+	private Vector<globe> lowerBoundItems;
+	private Vector<globe> upperBoundItems;
+	private double capacity;
+	
+	public sack(double c) {
+		lowerBoundValue = 0;
+		lowerBoundCost = 0;
+		upperBoundValue = 0;
+		upperBoundCost = 0;
+		lowerBoundItems = new Vector<>();
+		upperBoundItems = new Vector<>();
+		capacity = c;
+	}
+	
+	public void setLowerBound(PriorityQueue<globe> value, PriorityQueue<globe> cost, PriorityQueue<globe> ratio) {
+		do {
+			String itemName = value.peek().getName();
+			double tempVal = value.peek().getValue();
+			double tempRatio = value.peek().getRatio();
+			double tempCost = value.poll().getCost();
+			if (lowerBoundCost + tempCost <= capacity) {
+				lowerBoundValue += tempVal;
+				lowerBoundCost += tempCost;
+				lowerBoundItems.add(new globe(itemName, tempVal, tempCost));
+			}
+		} while (!value.isEmpty());
+		
+		double totalFromCost = 0;
+		double capacityFromCost = 0;
+		Vector<globe> itemsTakenByCost = new Vector<>();
+		while (totalFromCost + cost.peek().getCost() <= capacity) {
+			String itemName = cost.peek().getName();
+			double tempVal = cost.peek().getValue();
+			double tempRatio = cost.peek().getRatio();
+			double tempCost = cost.poll().getCost();
+			itemsTakenByCost.add(new globe(itemName, tempVal, tempCost));
+			totalFromCost += tempVal;
+			capacityFromCost += tempCost;
+		}
+		
+		if (totalFromCost > lowerBoundValue) {
+			lowerBoundValue = totalFromCost;
+			lowerBoundCost = capacityFromCost;
+			lowerBoundItems = itemsTakenByCost;
+		}
+		
+		double totalFromRatio = 0;
+		double capacityFromRatio = 0;
+		Vector<globe> itemsTakenByRatio = new Vector<>();
+		while (totalFromRatio + ratio.peek().getCost() <= capacity) {
+			String itemName = ratio.peek().getName();
+			double tempVal = ratio.peek().getValue();
+			double tempCost = ratio.poll().getCost();
+			itemsTakenByRatio.add(new globe(itemName, tempVal, tempCost));
+			totalFromRatio += tempVal;
+			capacityFromRatio += tempCost;
+		}
+		
+		if (totalFromRatio > lowerBoundValue) {
+			lowerBoundValue = totalFromRatio;
+			lowerBoundCost = capacityFromRatio;
+			lowerBoundItems = itemsTakenByRatio;
+		}
+	}
+	
+	public void setUpperBound(PriorityQueue<globe> ratio) {
+		while (upperBoundCost <= capacity && !ratio.isEmpty()) {
+			String itemName = ratio.peek().getName();
+			double tempVal = ratio.peek().getValue();
+			double tempCost = ratio.poll().getCost();
+			upperBoundItems.add(new globe(itemName, tempVal, tempCost));
+			upperBoundValue += tempVal;
+			upperBoundCost += tempCost;
+		}
+	}
+	
+	public void printBounds() {
+		System.out.println("Lower bound: " + lowerBoundValue);
+		for (globe g : lowerBoundItems) {
+			System.out.println(g.getName());
+		}
+		
+		System.out.println("\nUpper bound: " + upperBoundValue);
+		for (globe g : upperBoundItems) {
+			System.out.println(g.getName());
+		}
+	}
+}
+
 public class Phase1 {
 
 	public static void main(String[] args) {
-		int capacity = 0;
+		sack s = null;
 		PriorityQueue<globe> value = new PriorityQueue<globe>(1, new PQsortValue());
 		PriorityQueue<globe> cost = new PriorityQueue<globe>(1, new PQsortCost());
 		PriorityQueue<globe> ratio = new PriorityQueue<globe>(1, new PQsortRatio());
+		PriorityQueue<globe> ratio2 = new PriorityQueue<globe>(1, new PQsortRatio());
 		
 		try {
 			// sets up parsing data
@@ -89,14 +185,14 @@ public class Phase1 {
 			
 			try {
 				br = new BufferedReader(new FileReader(currentDir + "\\k05.csv"));
-				capacity = Integer.parseInt(br.readLine());
-				System.out.println("capacity: " + capacity);
+				s = new sack(Integer.parseInt(br.readLine()));
 				while ((line = br.readLine()) != null) {
 					String[] itemInfo = line.split(",");	//name,cost,value
-					System.out.println(itemInfo[0] + ":" + itemInfo[1] + ":" + itemInfo[2]);
+					//System.out.println(itemInfo[0] + ":" + itemInfo[1] + ":" + itemInfo[2]);
 					value.add(new globe(itemInfo[0], Integer.parseInt(itemInfo[2]), Integer.parseInt(itemInfo[1])));
 					cost.add(new globe(itemInfo[0], Integer.parseInt(itemInfo[2]), Integer.parseInt(itemInfo[1])));
 					ratio.add(new globe(itemInfo[0], Integer.parseInt(itemInfo[2]), Integer.parseInt(itemInfo[1])));
+					ratio2.add(new globe(itemInfo[0], Integer.parseInt(itemInfo[2]), Integer.parseInt(itemInfo[1])));
 				}
 			} catch (FileNotFoundException e) {
 				e.printStackTrace();
@@ -109,78 +205,8 @@ public class Phase1 {
 			e.printStackTrace();
 		}
 		
-		double totalFromValue = 0;
-		double capacityFromValue = 0;
-		Vector<globe> itemsTakenByValue = new Vector<>();
-		do {
-			String itemName = value.peek().getName();
-			double tempVal = value.peek().getValue();
-			double tempRatio = value.peek().getRatio();
-			double tempCost = value.poll().getCost();
-			System.out.println(itemName + ":" + tempVal + ":" + tempCost + ":" + tempRatio);
-			if (capacityFromValue + tempCost <= capacity) {
-				totalFromValue += tempVal;
-				capacityFromValue += tempCost;
-				itemsTakenByValue.add(new globe(itemName, tempVal, tempCost));
-				System.out.println("taken");
-			}
-		} while (!value.isEmpty());
-		
-		
-		System.out.println(totalFromValue);
-		System.out.println(capacityFromValue);
-		for (globe g : itemsTakenByValue) {
-			System.out.println(g.getName());
-		}
-		
-		double totalFromCost = 0;
-		double capacityFromCost = 0;
-		Vector<globe> itemsTakenByCost = new Vector<>();
-		while (totalFromCost + cost.peek().getCost() <= capacity) {
-			itemsTakenByCost.add(new globe(cost.peek().getName(), cost.peek().getValue(), cost.peek().getCost()));
-			totalFromCost += cost.peek().getValue();
-			capacityFromCost += cost.poll().getCost();
-		}
-		
-		System.out.println(totalFromCost);
-		System.out.println(capacityFromCost);
-		for (globe g : itemsTakenByCost) {
-			System.out.println(g.getName());
-		}
-		
-		double upperBound = 0;
-		double totalFromRatio = 0;
-		double capacityFromRatio = 0;
-		Vector<globe> itemsTakenByRatio = new Vector<>();
-		while (totalFromRatio + ratio.peek().getCost() <= capacity) {
-			itemsTakenByRatio.add(new globe(ratio.peek().getName(), ratio.peek().getValue(), ratio.peek().getCost()));
-			totalFromRatio += ratio.peek().getValue();
-			capacityFromRatio += ratio.poll().getCost();
-		}
-		upperBound = totalFromRatio + ratio.poll().getValue();
-		
-		System.out.println(totalFromRatio);
-		System.out.println(capacityFromRatio);
-		for (globe g : itemsTakenByRatio) {
-			System.out.println(g.getName());
-		}
-		
-		
-		double lowerBound;
-		if (totalFromValue >= totalFromCost) {
-			if (totalFromValue >= totalFromRatio) {
-				lowerBound = totalFromValue;
-			} else {
-				lowerBound = totalFromRatio;
-			}
-		} else {
-			if (totalFromCost >= totalFromRatio) {
-				lowerBound = totalFromCost;
-			} else {
-				lowerBound = totalFromRatio;
-			}
-		}
-		System.out.println("Lower bound: " + lowerBound);
-		System.out.println("Upper bound: " + upperBound);
+		s.setLowerBound(value, cost, ratio);
+		s.setUpperBound(ratio2);
+		s.printBounds();
 	}
 }
