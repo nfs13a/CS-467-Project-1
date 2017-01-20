@@ -154,12 +154,16 @@ class sack {
 	}
 	
 	public void printBounds() {
-		System.out.println("Lower bound: " + lowerBoundValue);
+		System.out.println("Capacity: " + capacity);
+		
+		System.out.println("\nLower bound: " + lowerBoundValue);
+		System.out.println("Cost: " + lowerBoundCost);
 		for (globe g : lowerBoundItems) {
 			System.out.println(g.getName());
 		}
 		
 		System.out.println("\nUpper bound: " + upperBoundValue);
+		System.out.println("Cost: " + lowerBoundValue);
 		for (globe g : upperBoundItems) {
 			System.out.println(g.getName());
 		}
@@ -174,34 +178,23 @@ public class Phase1 {
 		PriorityQueue<globe> cost = new PriorityQueue<globe>(1, new PQsortCost());
 		PriorityQueue<globe> ratio = new PriorityQueue<globe>(1, new PQsortRatio());
 		PriorityQueue<globe> ratio2 = new PriorityQueue<globe>(1, new PQsortRatio());
-		
+
 		try {
-			// sets up parsing data
-			BufferedReader br = null;
-			String line = "";
-			
-			//gets current directory to know where to find csv's
 			String currentDir = new File("").getAbsolutePath();
-			
-			try {
-				br = new BufferedReader(new FileReader(currentDir + "\\k05.csv"));
-				s = new sack(Integer.parseInt(br.readLine()));
-				while ((line = br.readLine()) != null) {
-					String[] itemInfo = line.split(",");	//name,cost,value
-					//System.out.println(itemInfo[0] + ":" + itemInfo[1] + ":" + itemInfo[2]);
-					value.add(new globe(itemInfo[0], Integer.parseInt(itemInfo[2]), Integer.parseInt(itemInfo[1])));
-					cost.add(new globe(itemInfo[0], Integer.parseInt(itemInfo[2]), Integer.parseInt(itemInfo[1])));
-					ratio.add(new globe(itemInfo[0], Integer.parseInt(itemInfo[2]), Integer.parseInt(itemInfo[1])));
-					ratio2.add(new globe(itemInfo[0], Integer.parseInt(itemInfo[2]), Integer.parseInt(itemInfo[1])));
-				}
-			} catch (FileNotFoundException e) {
-				e.printStackTrace();
-			} catch (IOException e) {
-				e.printStackTrace();
+			BufferedReader br = new BufferedReader(new FileReader(currentDir + "\\k05.csv"));
+			String line = "";
+			s = new sack(Integer.parseInt(br.readLine()));
+			while ((line = br.readLine()) != null) {
+				String[] itemInfo = line.split(","); // name,cost,value
+				value.add(new globe(itemInfo[0], Integer.parseInt(itemInfo[2]), Integer.parseInt(itemInfo[1])));
+				cost.add(new globe(itemInfo[0], Integer.parseInt(itemInfo[2]), Integer.parseInt(itemInfo[1])));
+				ratio.add(new globe(itemInfo[0], Integer.parseInt(itemInfo[2]), Integer.parseInt(itemInfo[1])));
+				ratio2.add(new globe(itemInfo[0], Integer.parseInt(itemInfo[2]), Integer.parseInt(itemInfo[1])));
 			}
 			br.close();
-		} catch (Exception e) {
-			// Handle errors for Class.forName
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
 		
