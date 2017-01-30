@@ -264,15 +264,9 @@ class TreeManager {
 	}
 }
 
-public class Phase1 {
+public class Thief {
 	
-	int num;
-	
-	public Phase1() {
-		num = 1;
-	}
-	
-	/*sack s;
+	sack s;
 	Vector<globe> list;
 	
 	public Thief(String filename) {
@@ -287,11 +281,11 @@ public class Phase1 {
 				System.out.println(itemInfo[0] + ":v:" + itemInfo[2] + ":c:" + itemInfo[1]);
 				list.add(new globe(itemInfo[0], Integer.parseInt(itemInfo[2]), Integer.parseInt(itemInfo[1])));
 				
-				value.add(new globe(itemInfo[0], Integer.parseInt(itemInfo[2]), Integer.parseInt(itemInfo[1])));
+				/*value.add(new globe(itemInfo[0], Integer.parseInt(itemInfo[2]), Integer.parseInt(itemInfo[1])));
 				cost.add(new globe(itemInfo[0], Integer.parseInt(itemInfo[2]), Integer.parseInt(itemInfo[1])));
 				ratio.add(new globe(itemInfo[0], Integer.parseInt(itemInfo[2]), Integer.parseInt(itemInfo[1])));
 				ratio2.add(new globe(itemInfo[0], Integer.parseInt(itemInfo[2]), Integer.parseInt(itemInfo[1])));
-				globeCount++;
+				globeCount++;*/
 			}
 			br.close();
 		} catch (FileNotFoundException e) {
@@ -320,7 +314,7 @@ public class Phase1 {
 	
 	public void getBounds() {
 		s.printBounds();
-	}*/
+	}
 
 	public static void main(String[] args) {
 		/*sack s = null;
@@ -352,10 +346,10 @@ public class Phase1 {
 			e.printStackTrace();
 		}*/
 		
-		/*Thief t = new Thief("k05.csv");
+		Thief t = new Thief("k05.csv");
 		
 		t.setBounds();
-		t.getBounds();*/
+		t.getBounds();
 		
 		/*s.setLowerBound(value, cost, ratio);
 		s.setUpperBound(ratio2);

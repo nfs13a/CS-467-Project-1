@@ -1,4 +1,4 @@
-package bounds;
+package implementation;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Vector;
+import java.io.FilePermission;
 
 class globe {
 	
@@ -264,22 +265,17 @@ class TreeManager {
 	}
 }
 
-public class Phase1 {
+public class Thief {
 	
-	int num;
-	
-	public Phase1() {
-		num = 1;
-	}
-	
-	/*sack s;
+	sack s;
 	Vector<globe> list;
 	
 	public Thief(String filename) {
 		list = new Vector<>();
 		try {
 			String currentDir = new File("").getAbsolutePath();
-			BufferedReader br = new BufferedReader(new FileReader(currentDir + "\\" + filename));
+			FilePermission permission = new FilePermission(currentDir + "/" + filename, "read");
+			BufferedReader br = new BufferedReader(new FileReader(currentDir + "/" + filename));
 			String line = "";
 			s = new sack(Integer.parseInt(br.readLine()));
 			while ((line = br.readLine()) != null) {
@@ -287,11 +283,11 @@ public class Phase1 {
 				System.out.println(itemInfo[0] + ":v:" + itemInfo[2] + ":c:" + itemInfo[1]);
 				list.add(new globe(itemInfo[0], Integer.parseInt(itemInfo[2]), Integer.parseInt(itemInfo[1])));
 				
-				value.add(new globe(itemInfo[0], Integer.parseInt(itemInfo[2]), Integer.parseInt(itemInfo[1])));
+				/*value.add(new globe(itemInfo[0], Integer.parseInt(itemInfo[2]), Integer.parseInt(itemInfo[1])));
 				cost.add(new globe(itemInfo[0], Integer.parseInt(itemInfo[2]), Integer.parseInt(itemInfo[1])));
 				ratio.add(new globe(itemInfo[0], Integer.parseInt(itemInfo[2]), Integer.parseInt(itemInfo[1])));
 				ratio2.add(new globe(itemInfo[0], Integer.parseInt(itemInfo[2]), Integer.parseInt(itemInfo[1])));
-				globeCount++;
+				globeCount++;*/
 			}
 			br.close();
 		} catch (FileNotFoundException e) {
@@ -320,7 +316,7 @@ public class Phase1 {
 	
 	public void getBounds() {
 		s.printBounds();
-	}*/
+	}
 
 	public static void main(String[] args) {
 		/*sack s = null;
@@ -352,10 +348,10 @@ public class Phase1 {
 			e.printStackTrace();
 		}*/
 		
-		/*Thief t = new Thief("k05.csv");
+		Thief t = new Thief("k05.csv");
 		
 		t.setBounds();
-		t.getBounds();*/
+		t.getBounds();
 		
 		/*s.setLowerBound(value, cost, ratio);
 		s.setUpperBound(ratio2);
