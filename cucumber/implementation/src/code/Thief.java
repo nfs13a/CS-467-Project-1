@@ -5,12 +5,17 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.sql.Date;
+import java.text.DateFormat;
+import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Vector;
+import java.util.concurrent.TimeUnit;
 
 import com.sun.corba.se.impl.orbutil.graph.Node;
 
@@ -21,6 +26,7 @@ class globe {
 	private double cost;
 	
 	public globe(String n, double v, double c) {
+		
 		name = n;
 		value = v;
 		cost = c;
@@ -213,16 +219,18 @@ class sack {
 }
 
 class TreeNode {
-	private int self;	//# of node in TreeManager.tree (map)
+	protected int self;	//# of node in TreeManager.tree (map)
 	private globe data;	//actual globe
-	private Integer parent;	//# of parent node in TreeManager.tree
+	protected Integer parent;	//# of parent node in TreeManager.tree
 	private Integer left;	//# of child not taken in tree
 	private Integer right;	//# of child taken in tree
-	private boolean exceedsCap;	//if adding this node exceeds capacity
+	//private boolean exceedsCap;	//if adding this node exceeds capacity
 	private boolean taken;	//if this node was taken or not (will be right child of parent)
-	private boolean canBeOptimal;	//if taking all other nodes below this would exceed TreeManager.bestValue
-	private boolean trueLeaf;	//if this is node will never have children (is last in queue of globes)
-	private int depth;	//how many nodes from root corresponds to placement in allGlobes Vector
+	//private boolean canBeOptimal;	//if taking all other nodes below this would exceed TreeManager.bestValue
+	protected boolean trueLeaf;	//if this is node will never have children (is last in queue of globes)
+	protected int depth;	//how many nodes from root corresponds to placement in allGlobes Vector
+	
+	public TreeNode() { /*do nothing*/ }
 	
 	/**
 	 * @param s - self identifier (int)
@@ -241,8 +249,8 @@ class TreeNode {
 		trueLeaf = false;
 		depth = d;
 		
-		exceedsCap = false;
-		canBeOptimal = false;
+		//exceedsCap = false;
+		//canBeOptimal = false;
 	}
 	
 	public int getSelf() {
@@ -259,6 +267,10 @@ class TreeNode {
 	
 	public double getCost() {
 		return data.getCost();
+	}
+	
+	public double getRatio() {
+		return data.getRatio();
 	}
 	
 	public int getParent() {
@@ -319,6 +331,9 @@ class TreeManager {
 	protected double bagCap;
 	protected Vector<Integer> currentGlobes;	//indexes of all globes in the current sack
 	
+	protected long startTime;
+	protected long endTime;
+	
 	/**
 	 * @param globes - list of all globes in house (Vector)
 	 * @param e - capacity of sack (double)
@@ -337,6 +352,8 @@ class TreeManager {
 		//bag = new sack(e);
 		bagCap = e;
 		currentGlobes = new Vector<Integer>();
+		startTime = 0;
+		endTime = 0;
 	}
 	
 	protected boolean checkNode(TreeNode node) {
@@ -352,7 +369,7 @@ class TreeManager {
 	}
 	
 	protected void saveBestPath() {
-		if (currVal <= bestVal) {
+		if (currVal <= bestVal || currCost > bagCap) {
 			if (tree.get(currentNode).getTaken()) {
 				currVal -= tree.get(currentNode).getValue();
 				currCost -= tree.get(currentNode).getCost();
@@ -379,6 +396,7 @@ class TreeManager {
 	}
 	
 	public void FindOptimalSack() {
+		startTime = System.nanoTime();
 		boolean cont = true;
 		//while (!(currentNode == 0) || cont) {
 		while (currentNode != 0 || cont || (tree.get(0).getLeft() == null)) {
@@ -401,7 +419,7 @@ class TreeManager {
 				//create a new TreeNode to insert if needed with incremented newestNode identifier, data from allGlobes of its parent's depth (its depth - 1), the parent identifier, and the depth of parent + 1
 				TreeNode temp = new TreeNode(++newestNode, allGlobes.elementAt((tempCurr.getDepth())), tempCurr.getSelf(), true, tempCurr.getDepth() + 1);
 				//System.out.println("entered right");
-				if (temp.getCost() + currCost <= bagCap) {
+				//if (temp.getCost() + currCost <= bagCap) {
 					//System.out.println("less than cap");
 					tree.put(temp.getSelf(), temp);
 					tempCurr.setRight(temp.getSelf());
@@ -409,10 +427,10 @@ class TreeManager {
 					currCost += temp.getCost();
 					currentNode = temp.getSelf();
 					//System.out.println(tree.get(currentNode).getSelf());
-				} else {
+				/*} else {
 					tree.put(temp.getSelf(), temp);
 					tempCurr.setRight(temp.getSelf());
-				}
+				}*/
 				
 				/*System.out.println("new: " + temp.getSelf());
 				System.out.println("taken: " + temp.getTaken());
@@ -491,6 +509,8 @@ class TreeManager {
 			//System.out.println(" ------------ \n");
 		}
 		
+		endTime = System.nanoTime();
+
 		//System.out.println(tree.size());
 		System.out.println("\ntotal created: " + newestNode);
 	}
@@ -503,6 +523,30 @@ class TreeManager {
 		}
 		System.out.println("Value: " + bestVal);
 		System.out.println("Cost: " + bestCost);
+		
+//		System.out.println("Calculation time (nanoseconds): " + (endTime - startTime));
+		System.out.println("solution Time : " + getFormattedTime(endTime - startTime));
+	}
+	
+	private String getFormattedTime(Long total) {
+		Long oneMinute = new Long("60000000000");
+		String time = "";
+		long seconds = 0;	//the way I find seconds is totally unnecessary, but I was finding minutes first and this works, so I am leaving it for now
+		if (total.compareTo(oneMinute) >= 0) {	//nine 0's before
+			seconds = total / oneMinute * 60;
+			total %= oneMinute;
+			//time += ((seconds * 60) + ":");
+		}
+		
+		if (total.compareTo((long) 1000000000) >= 0) {
+			seconds += total / 1000000000;
+			total %= 1000000000;
+			//time += (seconds);
+		}
+		
+		time += (seconds + "." + total + " seconds");
+		
+		return time;
 	}
 }
 
@@ -516,7 +560,7 @@ class SmartManager extends TreeManager {
 		super(globes, e);
 		
 		optimalRemainingValue = new Vector<Double>();
-		optimalRemainingValue.setSize(allGlobes.size() - 1);
+		optimalRemainingValue.setSize(allGlobes.size());
 		setOptimalRemainingValues();
 		
 		sack s = new sack(e);
@@ -529,9 +573,11 @@ class SmartManager extends TreeManager {
 	}
 	
 	private void setOptimalRemainingValues() {
-		optimalRemainingValue.setElementAt(0.0, allGlobes.size() - 2);
-		for (int i = allGlobes.size() - 3; i >= 0; i--) {
-			optimalRemainingValue.set(i, allGlobes.get(i + 2).getValue() + optimalRemainingValue.get(i + 1));
+		optimalRemainingValue.setElementAt(allGlobes.elementAt(allGlobes.size() - 1).getValue(), allGlobes.size() - 1);
+		/*System.out.println("aG size: " + allGlobes.size());
+		System.out.println("oRV size: " + optimalRemainingValue.size());*/
+		for (int i = allGlobes.size() - 2; i >= 0; i--) {
+			optimalRemainingValue.setElementAt(allGlobes.elementAt(i).getValue() + optimalRemainingValue.get(i + 1), i);
 		}
 	}
 	
@@ -545,6 +591,7 @@ class SmartManager extends TreeManager {
 	}
 	
 	public void FindOptimalSack() {
+		startTime = System.nanoTime();
 		boolean cont = true;
 		while (currentNode != 0 || cont || (tree.get(0).getLeft() == null)) {
 			TreeNode tempCurr = tree.get(currentNode);
@@ -566,7 +613,7 @@ class SmartManager extends TreeManager {
 				//create a new TreeNode to insert if needed with incremented newestNode identifier, data from allGlobes of its parent's depth (its depth - 1), the parent identifier, and the depth of parent + 1
 				TreeNode temp = new TreeNode(++newestNode, allGlobes.elementAt((tempCurr.getDepth())), tempCurr.getSelf(), true, tempCurr.getDepth() + 1);
 				//System.out.println("entered right");
-				if (temp.getCost() + currCost <= bagCap) {
+				if (temp.getCost() + currCost <= bagCap && bestVal < currVal + optimalRemainingValue.elementAt(temp.getDepth() - 1)) {
 					//System.out.println("less than cap");
 					tree.put(temp.getSelf(), temp);
 					tempCurr.setRight(temp.getSelf());
@@ -592,7 +639,10 @@ class SmartManager extends TreeManager {
 				TreeNode temp = new TreeNode(++newestNode, allGlobes.elementAt((tempCurr.getDepth())), tempCurr.getSelf(), false, tempCurr.getDepth() + 1);
 				tree.put(temp.getSelf(), temp);
 				tempCurr.setLeft(temp.getSelf());
-				currentNode = temp.getSelf();
+				
+				if (bestVal < currVal + optimalRemainingValue.elementAt(temp.getDepth() - 1) - temp.getValue()) {
+					currentNode = temp.getSelf();
+				}
 				
 				/*System.out.println("new: " + temp.getSelf());
 				System.out.println("taken: " + temp.getTaken());
@@ -656,8 +706,155 @@ class SmartManager extends TreeManager {
 			//System.out.println(" ------------ \n");
 		}
 		
+		endTime = System.nanoTime();
+		
 		//System.out.println(tree.size());
 		System.out.println("\ntotal created: " + newestNode);
+	}
+}
+
+class DoubleTreeNode {
+	
+	int self;
+	Integer parent;
+	int depth;
+	boolean smallTaken, largeTaken;
+	
+	TreeNode small, large;
+	double[] optimalBelow;	//total value if all proceeding TreeNodes are taken and (O: neither, 1: smaller, 2: larger, 3: both)
+	
+	public DoubleTreeNode(int s, globe smallG, globe largeG, Integer p, boolean takeS, boolean takeL, int d) {
+		
+		self = s;
+		//small = smallG;
+		//large = largeG;
+		parent = p;
+		smallTaken = takeS;
+		largeTaken = takeL;
+		depth = d;
+		
+		small = new TreeNode(s, smallG, p, takeS, d);
+		large = new TreeNode(s, largeG, p, takeL, d);
+		
+		optimalBelow = new double[4];
+		for (int i = 0; i < 4; i++) optimalBelow[i] = 0;
+		
+	}
+	
+	
+	public TreeNode getSmaller() {
+		return small;
+	}
+	
+	public TreeNode getLarger() {
+		return large;
+	}
+	
+	public void setOptimal(double val, int index) {
+		optimalBelow[index] = val;
+	}
+	
+	public double getOptimal(int index) {
+		return optimalBelow[index];
+	}
+}
+
+class DoubleTreeManager {
+	Map<Integer, DoubleTreeNode> tree;
+	double capacity;
+	Vector<globe> allGlobes;
+	Vector<DoubleTreeNode> doubleGlobes;
+	
+	public DoubleTreeManager(Vector globes, double cap) {
+		tree = new HashMap<Integer, DoubleTreeNode>();
+		
+		allGlobes = new Vector<globe>(globes);
+		
+		PriorityQueue<globe> ratio = new PriorityQueue<globe>(new PQsortRatio());
+		for (globe g : allGlobes) {
+			ratio.add(g);
+		}
+		
+		createDoubleNodes(ratio);
+		
+		setOptimalRemainingValues();
+		
+		capacity = cap;
+	}
+	
+	private void createDoubleNodes(PriorityQueue<globe> ratio) {
+		doubleGlobes = new Vector<DoubleTreeNode>();
+		int n = 0;
+		System.out.println(ratio.size());
+		while (ratio.size() > 1) {
+			//System.out.println(n);
+			globe large = ratio.poll();
+			globe small = ratio.poll();
+			System.out.println(large.getName());
+			System.out.println(small.getName());
+			doubleGlobes.addElement(new DoubleTreeNode(n, small, large, n - 1, true, true, n + 1));
+			n++;
+		}
+		
+		if (ratio.size() == 1) {
+			doubleGlobes.addElement(new DoubleTreeNode(n, new globe(null, 0, 0), ratio.poll(), n - 1, true, true, n + 1));
+		}
+	}
+	
+	public void printNodes() {
+		for (DoubleTreeNode d : doubleGlobes) {
+			TreeNode s = d.getSmaller();
+			TreeNode l = d.getLarger();
+			System.out.println(s.getName() + " with " + s.getRatio() + "\tand\t" + l.getName() + " with " + l.getRatio());
+		}
+	}
+	
+	private void setOptimalRemainingValues() {
+		/*for (int i = 0; i < 4; i++) {
+			doubleGlobes.elementAt(doubleGlobes.size() - 1).setOptimal(0, i);
+		}*/
+		
+		//initialize leaf nodes
+		double sm = doubleGlobes.elementAt(doubleGlobes.size() - 1).getSmaller().getValue();
+		double lg = doubleGlobes.elementAt(doubleGlobes.size() - 1).getLarger().getValue();
+		
+		doubleGlobes.elementAt(doubleGlobes.size() - 1).setOptimal(0, 0);
+		doubleGlobes.elementAt(doubleGlobes.size() - 1).setOptimal(sm, 1);
+		doubleGlobes.elementAt(doubleGlobes.size() - 1).setOptimal(lg, 2);
+		doubleGlobes.elementAt(doubleGlobes.size() - 1).setOptimal(lg + sm, 3);
+		
+		//start at parents of leaves, work up
+		for (int i = doubleGlobes.size() - 2; i >= 0; i--) {
+			
+			double prevTotal = 0;
+			
+			if (doubleGlobes.elementAt(i + 1).getSmaller().getName() != null) {
+				prevTotal += doubleGlobes.elementAt(i + 1).getOptimal(3);
+			} else {
+				prevTotal += doubleGlobes.elementAt(i + 1).getOptimal(2);
+			}
+			
+			double l = doubleGlobes.elementAt(i).getLarger().getValue();
+			double s = doubleGlobes.elementAt(i).getSmaller().getValue();
+			
+			
+			doubleGlobes.elementAt(i).setOptimal(prevTotal, 0);
+			
+			doubleGlobes.elementAt(i).setOptimal(prevTotal + s, 1);
+		
+			doubleGlobes.elementAt(i).setOptimal(prevTotal + l, 2);
+		
+			doubleGlobes.elementAt(i).setOptimal(prevTotal + l + s, 3);
+		}
+	}
+	
+	public void printOptimalRemain() {
+		for (DoubleTreeNode d : doubleGlobes) {
+			for (int i = 0; i < 4; i++) {
+				System.out.print(d.getOptimal(i) + " ");
+			}
+			System.out.println("");
+		}
 	}
 }
 
@@ -665,6 +862,8 @@ public class Thief {
 	
 	sack s;
 	TreeManager tm;
+	SmartManager sm;
+	DoubleTreeManager dm;
 	Vector<globe> list;
 	
 	public Thief(String filename) {
@@ -682,6 +881,8 @@ public class Thief {
 			}
 			br.close();
 			tm = new TreeManager(list, cap);
+			sm = new SmartManager(list, cap);
+			dm = new DoubleTreeManager(list, cap);
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
@@ -702,6 +903,17 @@ public class Thief {
 		tm.FindOptimalSack();
 		tm.getOptimalSack();
 	}
+	
+	public void getOptimalSackSmartly() {
+		sm.FindOptimalSack();
+		sm.getOptimalSack();
+	}
+	
+	//for debugging
+	public void printDoubleNodes() {
+		dm.printNodes();
+		dm.printOptimalRemain();
+	}
 
 	public static void main(String[] args) {
 		
@@ -711,6 +923,9 @@ public class Thief {
 		t.getBounds();
 		
 		t.getOptimalSack();
+		t.getOptimalSackSmartly();
+		
+		t.printDoubleNodes();
 		
 		//TreeManager tm = new TreeManager(list, s.getCapacity());
 		//tm.printOptimalRemain();
