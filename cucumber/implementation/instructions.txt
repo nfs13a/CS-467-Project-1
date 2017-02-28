@@ -1,0 +1,13 @@
+This program requires Java 7 or 8 (I used 8, but it should be backwards compatible).
+
+Compile the program with "javac Thief.java"
+
+Run the program with "java Thief"
+
+Make sure that the java compiler and interpreter are is in the path.
+
+I programmed and tested in Eclipse Neon (4.6.0), so I am not anticipating any issues to arise on command line or otherwise.
+
+Input: you will be prompted for a .csv name. Do not include the extension. If you want to test on your own .csv, make sure to put it in the Input Files directory.
+
+All 3 methods (brute force, both optimizations) will end themselves if they reach seven minutes of runtime.
